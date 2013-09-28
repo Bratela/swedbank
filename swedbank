@@ -54,19 +54,6 @@ agent.get(page_landing) do |page|
     end
   puts "success!".black
 
-  #retrieve transaction history
-  print "Retrieving transaction history...".black
-    #placeholder for transactions
-    dates = Array.new
-    receivers = Array.new
-    amounts = Array.new
-    transactions_page = agent.click(overview.link_with(:href => transactions_link))
-    dates.push(transactions_page.search('.mb-list .list-content .date').text.strip)
-   	receivers.push(transactions_page.search('.mb-list .list-content .receiver').text.strip)
-   	amounts.push(transactions_page.search('.mb-list .list-content .amount').text.strip)
-  puts "success!".black
-
-
   # Print account info -
   account_name_length    = 35
   account_balance_length = 30
@@ -77,6 +64,25 @@ agent.get(page_landing) do |page|
   	puts "#{account_name}#{dots}#{dots_n}#{account_balance.delete(' ')}" + " kr".yellow
   }
 
+=begin
+  ********************
+  This shit don't work
+  ********************
+
+  #retrieve transaction history
+  print "Retrieving transaction history...".black
+    #placeholder for transactions
+    dates = Array.new
+    receivers = Array.new
+    amounts = Array.new
+    transactions_page = agent.click(overview.link_with(:href => transactions_link))
+    dates.push(transactions_page.search('.mb-list .list-content .date').text.strip)
+    receivers.push(transactions_page.search('.mb-list .list-content .receiver').text.strip.sub(' ', '_'))
+    amounts.push(transactions_page.search('.mb-list .list-content .amount').text.strip)
+  puts "success!".black
+=end
+
+=begin
   # Print latest transactions
   puts "Latest transactions".green
   rx = receivers[0].split()
@@ -87,5 +93,5 @@ agent.get(page_landing) do |page|
     dots_r = '.'.blue * (30 - rx[index].length)
   	puts "#{value}".blue + "#{dots_r}" + "#{rx[index]}".white + "#{dots_a}" + "#{amt[index].delete(' ')} kr".yellow  
   }
-  
+=end  
 end
