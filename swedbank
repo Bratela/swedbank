@@ -1,0 +1,91 @@
+#!/home/wayne/.rvm/rubies/ruby-2.0.0-p247/bin/ruby
+require 'rubygems'
+require 'mechanize'
+require 'colorize'
+
+#swedbank credentials - path to file
+path_to_file = "#{ENV['HOME']}/" + "swedbank_credentials"
+
+# try to read the config file. fail with message to user 
+begin
+ config = File.open(path_to_file).read
+rescue
+ puts "Error! Could not find #{path_to_file}. Please make sure it exists.".red
+end
+
+# read the login credentials 
+id  = config.split(/\n/)[0]  # personnummer
+pwd = config.split(/\n/)[1]  # lösenord
+
+# bank uris
+page_landing     = 'https://mobilbank.swedbank.se/banking/swedbank/login.html'
+page_auth_method = '/banking/swedbank/loginNext.html'
+page_password    = '/banking/swedbank/login.html'
+page_account_info= '/banking/swedbank/accounts.html'
+transactions_link= '/banking/swedbank/account.html?id=0'
+
+# mechanizer 
+agent = Mechanize.new
+
+# start with the login page
+agent.get(page_landing) do |page|
+  
+  #authorize user
+  print "Initializing authorization......".black
+    #step one : enter registration number and select method of authorization
+    step_one = page.form_with(:action => page_auth_method) do |form|
+      form.xyz = id
+      form.field_with(:name => 'auth-method').options[0].select
+    end.click_button
+  
+    #step two : enter the password
+    step_two = step_one.form_with(:action => page_password) do |form|
+      form.zyx = pwd
+    end.click_button
+  puts "success!".black
+  
+ #fetch account information
+  print "Fetching account information....".black
+    overview = step_two.link_with(:href => page_account_info).click
+    #placeholders for printable information
+    accounts = Hash.new
+    overview.search('.list-content dd').each do |account|
+      accounts[account.search('.name').text.strip.blue] = account.search('.amount').text.strip.yellow
+    end
+  puts "success!".black
+
+  #retrieve transaction history
+  print "Retrieving transaction history...".black
+    #placeholder for transactions
+    dates = Array.new
+    receivers = Array.new
+    amounts = Array.new
+    transactions_page = agent.click(overview.link_with(:href => transactions_link))
+    dates.push(transactions_page.search('.mb-list .list-content .date').text.strip)
+   	receivers.push(transactions_page.search('.mb-list .list-content .receiver').text.strip)
+   	amounts.push(transactions_page.search('.mb-list .list-content .amount').text.strip)
+  puts "success!".black
+
+
+  # Print account info -
+  account_name_length    = 35
+  account_balance_length = 30
+  puts "Account information".green
+  accounts.each {|account_name, account_balance|
+  	dots   = '.'.blue * (account_name_length  - account_name.length) 
+  	dots_n = '.'.blue * (account_balance_length - account_balance.delete(' ').length)
+  	puts "#{account_name}#{dots}#{dots_n}#{account_balance.delete(' ')}" + " kr".yellow
+  }
+
+  # Print latest transactions
+  puts "Latest transactions".green
+  rx = receivers[0].split()
+  amt = amounts[0].split()
+
+  dates[0].split().each_with_index{ |value, index|
+    dots_a = '.'.blue* (8-amt[index].delete(' ').length)
+    dots_r = '.'.blue * (30 - rx[index].length)
+  	puts "#{value}".blue + "#{dots_r}" + "#{rx[index]}".white + "#{dots_a}" + "#{amt[index].delete(' ')} kr".yellow  
+  }
+  
+end
