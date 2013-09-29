@@ -4,7 +4,7 @@ require 'mechanize'
 require 'colorize'
 
 #swedbank credentials - path to file
-path_to_file = "#{ENV['HOME']}/" + "swedbank_credentials"
+path_to_file = "#{ENV['HOME']}/" + "docs/" + ".swedbank_credentials"
 
 # try to read the config file. fail with message to user 
 begin
